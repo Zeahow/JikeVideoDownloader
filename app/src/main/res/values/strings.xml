@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">即刻视频下载器</string>
+    <string name="defaultPath">/storage/emulated/0/JKVD</string>
+    <string name="savePath">保存路径</string>
+    <string name="name">名称</string>
+    <string name="url">链接</string>
+    <string name="gettingName">-! 点我获取名称 !-</string>
+</resources>
