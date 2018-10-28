@@ -79,7 +79,10 @@ public class AddTaskDialog {
                             public void run() {
                                 DownloadTask task = new DownloadTask(null);
                                 String realUrl = task.getVedioRealUrl(_url);
-                                task.getAllTsUrl(realUrl);
+                                Vector<String> tsUrls = task.getAllTsUrl(realUrl);
+                                if(tsUrls == null) return;
+                                for(String url : tsUrls)
+                                    Log.d("JKVD", "Content-Length: " + String.valueOf(task.getLength(url)));
                             }
                         }).start();
                     }
