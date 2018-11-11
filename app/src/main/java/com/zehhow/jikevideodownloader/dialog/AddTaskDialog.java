@@ -7,15 +7,12 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
-
 import com.zehhow.jikevideodownloader.R;
-import com.zehhow.jikevideodownloader.download.DownloadTask;
 import com.zehhow.jikevideodownloader.okHttp.HttpClient;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Vector;
+
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -77,12 +74,7 @@ public class AddTaskDialog {
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                DownloadTask task = new DownloadTask(null);
-                                String realUrl = task.getVedioRealUrl(_url);
-                                Vector<String> tsUrls = task.getAllTsUrl(realUrl);
-                                if(tsUrls == null) return;
-                                for(String url : tsUrls)
-                                    Log.d("JKVD", "Content-Length: " + String.valueOf(task.getLength(url)));
+                                // Todo
                             }
                         }).start();
                     }
