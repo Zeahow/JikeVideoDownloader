@@ -9,7 +9,18 @@ public class TaskBean {
     public long totalLength;        // 任务文件总长度
     public long downloadedLength;   // 任务文件已下载长度
 
-    public String[] toStringArray() {
+    TaskBean() {}
+
+    public TaskBean(String url, String name, String path) {
+        this.url = url;
+        this.name = name;
+        this.path = path;
+        this.urlHashCode = (url != null ? url.hashCode() : 0);
+        this.downloadedLength = 0;
+        this.totalLength = 0;
+    }
+
+    String[] toStringArray() {
         return new String[]{
                 urlHashCode + "",
                 url,

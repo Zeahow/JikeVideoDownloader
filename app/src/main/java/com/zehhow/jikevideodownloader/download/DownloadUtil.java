@@ -11,9 +11,14 @@ import okhttp3.Headers;
 import okhttp3.Request;
 import okhttp3.Response;
 
-class DownloadUtil {
-    // 获取视频真实的m3u8地址
-    static String getM3u8Url(String url) {
+public class DownloadUtil {
+    /**
+     * 获取视频真实的m3u8地址
+     * @param url 视频网页地址
+     * @return 视频的mu8地址
+     */
+
+    public static String getM3u8Url(String url) {
         if(url == null) return null;
 
         String prefix = "https://m.okjike.com/";
@@ -41,6 +46,8 @@ class DownloadUtil {
 
             m3u8Url = m3u8Url.substring(beginIndex + 3, m3u8Url.indexOf("\"}"));
             Log.d("JKVD", "RealURL: " + m3u8Url);
+
+            response.body().close();
             return m3u8Url;
         } catch (IOException e) {
             e.printStackTrace();
@@ -48,7 +55,11 @@ class DownloadUtil {
         }
     }
 
-    // 根据m3u8地址获取所有ts分段的地址
+    /**
+     * 根据m3u8地址获取所有ts分段的地址
+     * @param m3u8Url 视频的m3u8地址
+     * @return 解析m3u8地址后获取的所有分段地址
+     */
     static Vector<String> getAllTsUrls(String m3u8Url) {
         if(m3u8Url == null) return null;
         Vector<String> urls = new Vector<>();
@@ -68,6 +79,7 @@ class DownloadUtil {
             Response response = HttpClient.getInstance().newCall(request).execute();
             if(!response.isSuccessful() || response.body() == null) return null;
             strs = response.body().string().split("\n");
+            response.body().close();
         } catch (IOException e) {
             e.printStackTrace();
             return null;
@@ -83,14 +95,18 @@ class DownloadUtil {
         return urls;
     }
 
-    // 获取单个视频文件的长度
+    /**
+     * 获取单个视频文件的长度
+     * @param url 视频文件地址
+     * @return 视频长度
+     */
     private static long getVedioLength(String url) {
         if(url == null) return 0;
         Request request = new Request.Builder().url(url).head().build();
 
         try {
             Response response = HttpClient.getInstance().newCall(request).execute();
-            if(!response.isSuccessful() || response.body() == null) return 0;
+            if(!response.isSuccessful()) return 0;
             Headers headers = response.headers();
 
             String strLen = headers.get("Content-Length");
@@ -101,7 +117,11 @@ class DownloadUtil {
         }
     }
 
-    // 获取多个视频文件的长度
+    /**
+     * 获取多个视频文件的长度
+     * @param urls 多个视频地址
+     * @return 每个视频的长度，与urls一一对应
+     */
     static Vector<Long> getVedioLength(Vector<String> urls) {
         Vector<Long> lengths = new Vector<>();
         if(urls == null || urls.isEmpty()) return lengths;
