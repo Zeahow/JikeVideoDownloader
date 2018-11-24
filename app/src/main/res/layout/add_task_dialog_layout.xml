@@ -40,7 +40,7 @@
             android:id="@+id/path"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:editable="false"
+            android:inputType="none"
             android:text="@string/defaultPath"/>
 
     </LinearLayout>

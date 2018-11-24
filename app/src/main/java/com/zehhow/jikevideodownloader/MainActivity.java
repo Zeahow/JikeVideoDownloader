@@ -8,22 +8,29 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
+import com.zehhow.jikevideodownloader.adapter.TaskAdapter;
 import com.zehhow.jikevideodownloader.dao.SQLiteHelper;
+import com.zehhow.jikevideodownloader.dao.TaskBean;
 import com.zehhow.jikevideodownloader.dialog.AddTaskDialog;
+
+import java.util.Vector;
 
 
 public class MainActivity extends AppCompatActivity {
     // 悬浮按钮的状态
     private enum FabState {
-        ADD,
-        DELETE
+        ADD,        // 新增任务
+        DELETE      // 删除任务
     }
     private FabState fabState = FabState.ADD;
     private String url;
+    private Vector<TaskBean> taskList;
 
 
     @Override
@@ -49,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         SQLiteHelper.init(this);    // 初始化数据库
+        initTaskList();                     // 初始化任务列表
 
         Intent intent = getIntent();
         // 判断是否由分享功能调用本Activity
@@ -109,6 +117,12 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * 权限请求回调函数
+     * @param requestCode 请求码，区分调用方，以此确定回调函数。1表示addTask，2表示deleteTask
+     * @param permissions 权限
+     * @param grantResults 结果
+     */
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch(requestCode) {
@@ -123,4 +137,16 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 初始化任务列表
+     */
+    private void initTaskList() {
+        taskList = new Vector<>();
+        for(int i=0; i<20; i++)
+            taskList.add(new TaskBean("", i+"", ""));
+
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(new TaskAdapter(taskList));
+    }
 }

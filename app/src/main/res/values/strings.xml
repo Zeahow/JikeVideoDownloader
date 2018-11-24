@@ -5,4 +5,5 @@
     <string name="name">名称</string>
     <string name="url">链接</string>
     <string name="gettingName">-! 点我获取名称 !-</string>
+    <string name="start">开始</string>
 </resources>
