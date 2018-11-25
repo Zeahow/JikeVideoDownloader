@@ -17,6 +17,8 @@
         android:fullBackupContent="true">
         <activity
             android:name=".MainActivity"
+            android:launchMode="singleInstance"
+            android:configChanges="screenSize|orientation"
             android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

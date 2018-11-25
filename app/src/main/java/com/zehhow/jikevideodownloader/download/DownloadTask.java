@@ -26,9 +26,8 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
         this.listener = listener;
     }
 
-
     /**
-     *
+     * 后台下载过程
      * @param taskBeans 任务信息类
      * @return 下载结果
      */
@@ -37,12 +36,20 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
         task = taskBeans[0];
         if(task.url == null || task.url.isEmpty()) return TaskStatus.FAILED;
 
+        Log.d("JKVD", "------URL After AsyncTask: " + task.url);
         // 判断目录是否存在，不存在则创建
         File file = new File(task.path);
         if(!file.exists()) {
-            file.mkdirs();
-            Log.d("JKVD", " Dir not exist");
+            if(!file.mkdirs()) {
+                Log.d("JKVD", " Failed to mkdir | " + task.path);
+                return TaskStatus.FAILED;
+            }
+            Log.d("JKVD", " Dir not exist | " + task.path);
         }
+
+        // 获取视频的m3u8播放列表地址
+        String m3u8 = DownloadUtil.getM3u8Url(task.url);
+        if(m3u8 == null || m3u8.isEmpty()) return TaskStatus.FAILED;
 
         // 如果未指定已下载长度、总长度，则从数据库中获取
         if(task.downloadedLength == 0)
@@ -57,7 +64,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
         }
 
         // 获取所有ts分段的下载地址及文件长度大小
-        Vector<String> tsUrls = DownloadUtil.getAllTsUrls(task.url);
+        Vector<String> tsUrls = DownloadUtil.getAllTsUrls(m3u8);
         Vector<Long> tsLengths = DownloadUtil.getVedioLength(tsUrls);
 
         // 若任务在数据库中不存在，则添加任务记录至数据库
@@ -76,12 +83,12 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
         file = new File(task.path, task.name);
         if(!file.exists()) {
             task.downloadedLength = 0;
-            Log.d("JKVD", " File deleted");
+            Log.d("JKVD", " File deleted | " + file.toString());
         }
 
-        Log.d("JKVD", " Start download..");
-        Log.d("JKVD", " DownloadedLength: " + task.downloadedLength);
-        Log.d("JKVD", " TotalLength: " + task.totalLength);
+        Log.d("JKVD", " Start downloading: " + task.name);
+        Log.d("JKVD", " DownloadedLength: " + task.downloadedLength + " | " + task.name);
+        Log.d("JKVD", " TotalLength: " + task.totalLength + " | " + task.name);
 
         /* 开始下载各个ts分段 */
 
@@ -130,7 +137,6 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
         }
     }
 
-
     /**
      * 下载一个ts分段文件
      * @param savedFile 数据保存文件
@@ -170,7 +176,6 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
             return downloadedLength;
         } catch (Exception e) {
             e.printStackTrace();
-
             return -1;
         } finally {
             try {
@@ -189,8 +194,8 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
     protected void onProgressUpdate(Integer... values) {
         int progress = values[0];
         if(progress > lastProgress) {
-            Log.d("JKVD", " Progress: " + progress);
-            Log.d("JKVD", " DownloadedLength: " + task.downloadedLength);
+            Log.d("JKVD", " Progress: " + progress + " | " + task.name);
+            Log.d("JKVD", " DownloadedLength: " + task.downloadedLength + " | " + task.name);
             listener.onProgress(progress);
             SQLiteHelper.getInstance().updateProgress(task.urlHashCode, task.downloadedLength);
             lastProgress = progress;
@@ -215,7 +220,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
                 break;
             case CANCELED:
                 // 取消任务时删除文件，以及删除任务记录
-                File file = new File(task.path + "/" + task.name);
+                File file = new File(task.path, task.name);
                 if(file.exists()) file.delete();
                 SQLiteHelper.getInstance().deleteTask(task.urlHashCode);
                 listener.onCanceled();
@@ -223,6 +228,12 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
             default:
                 break;
         }
+    }
+
+    @Override
+    protected void onCancelled() {
+        super.onCancelled();
+        taskStatus = TaskStatus.CANCELED;
     }
 
     /**

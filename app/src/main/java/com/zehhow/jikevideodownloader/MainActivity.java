@@ -18,7 +18,6 @@ import com.zehhow.jikevideodownloader.adapter.TaskAdapter;
 import com.zehhow.jikevideodownloader.dao.SQLiteHelper;
 import com.zehhow.jikevideodownloader.dao.TaskBean;
 import com.zehhow.jikevideodownloader.dialog.AddTaskDialog;
-
 import java.util.Vector;
 
 
@@ -29,9 +28,11 @@ public class MainActivity extends AppCompatActivity {
         DELETE      // 删除任务
     }
     private FabState fabState = FabState.ADD;
-    private String url;
-    private Vector<TaskBean> taskList;
+    private TaskAdapter taskAdapter;
 
+    public TaskAdapter getTaskAdapter() {
+        return taskAdapter;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                if(!checkPermission()) return;
                 switch (fabState) {
                     case ADD:
                         addTask(null);
@@ -58,7 +60,12 @@ public class MainActivity extends AppCompatActivity {
         SQLiteHelper.init(this);    // 初始化数据库
         initTaskList();                     // 初始化任务列表
 
-        Intent intent = getIntent();
+        onNewIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
         // 判断是否由分享功能调用本Activity
         if(Intent.ACTION_SEND.equals(intent.getAction())) {
             String url = intent.getStringExtra(Intent.EXTRA_TEXT);
@@ -68,19 +75,32 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * 初始化任务列表
+     */
+    private void initTaskList() {
+        RecyclerView recyclerView = findViewById(R.id.recyclerView);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        recyclerView.setLayoutManager(layoutManager);
+        taskAdapter = new TaskAdapter(new Vector<TaskBean>());
+        recyclerView.setAdapter(taskAdapter);
+
+
+        final Vector<TaskBean> taskList = SQLiteHelper.getInstance().queryAllTasks();
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                for(TaskBean task : taskList)
+                    taskAdapter.addTaskItem(task, false);
+            }
+        });
+    }
+
+    /**
      * 新建下载任务
      * @param url 下载地址
      */
     private void addTask(String url) {
-        this.url = url;
-        if(checkPermission(1))      // 已有权限
-            addTaskCallBack();
-    }
-
-    /**
-     * 权限检查后新建任务的回调函数
-     */
-    private void addTaskCallBack() {
+        if(!checkPermission()) return;
         new AddTaskDialog(this).show(url);
     }
 
@@ -88,28 +108,20 @@ public class MainActivity extends AppCompatActivity {
      * 删除下载任务
      */
     private void deleteTask() {
-        if(checkPermission(2))      // 已有权限
-            deleteTaskCallBack();
-    }
-
-    /**
-     * 权限检查后删除任务的回调函数
-     */
-    private void deleteTaskCallBack() {
-
+        if(!checkPermission()) return;
+        //Todo
     }
 
     /**
      * 权限检查
-     * @param requestCode 请求码，区分调用方，以此确定回调函数。1表示addTask，2表示deleteTask
-     * @return 此时是否拥有权
+     * @return 是否拥有权限
      */
-    private boolean checkPermission(int requestCode) {
+    private boolean checkPermission() {
         // 安卓6以上版本进行权限检查
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             String permission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
             if(checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-                requestPermissions(new String[]{permission}, requestCode);
+                requestPermissions(new String[]{permission}, 1);
                 return false;
             }
         }
@@ -119,7 +131,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * 权限请求回调函数
-     * @param requestCode 请求码，区分调用方，以此确定回调函数。1表示addTask，2表示deleteTask
+     * @param requestCode 请求码
      * @param permissions 权限
      * @param grantResults 结果
      */
@@ -127,26 +139,9 @@ public class MainActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch(requestCode) {
             case 1:
-            case 2:
-                if(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    if(requestCode == 1) addTaskCallBack();
-                    else deleteTaskCallBack();
-                else
+                if(grantResults.length <= 0 || grantResults[0] != PackageManager.PERMISSION_GRANTED)
                     Toast.makeText(this, "你拒绝了存储权限，无法继续操作", Toast.LENGTH_SHORT).show();
                 break;
         }
-    }
-
-    /**
-     * 初始化任务列表
-     */
-    private void initTaskList() {
-        taskList = new Vector<>();
-        for(int i=0; i<20; i++)
-            taskList.add(new TaskBean("", i+"", ""));
-
-        RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(new TaskAdapter(taskList));
     }
 }

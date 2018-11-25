@@ -5,6 +5,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import com.zehhow.jikevideodownloader.download.TaskStatus;
+
 import java.util.Vector;
 
 public class SQLiteHelper extends SQLiteOpenHelper {
@@ -33,7 +35,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
      */
     public static void init(Context context) {
         if(instance != null) return;
-        instance = new SQLiteHelper(context, "task", null, 1);
+        instance = new SQLiteHelper(context, "task", null, 2);
         db = instance.getReadableDatabase();
     }
 
@@ -122,6 +124,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 task.path = cursor.getString(cursor.getColumnIndex("path"));
                 task.totalLength = cursor.getLong(cursor.getColumnIndex("totalLength"));
                 task.downloadedLength = cursor.getLong(cursor.getColumnIndex("downloadedLength"));
+                task.progress = (int)(task.downloadedLength * 100 / task.totalLength);
+                task.status = task.progress == 100 ? TaskStatus.SUCCESS : TaskStatus.PAUSED;
                 tasks.add(task);
             } while(cursor.moveToNext());
         }
