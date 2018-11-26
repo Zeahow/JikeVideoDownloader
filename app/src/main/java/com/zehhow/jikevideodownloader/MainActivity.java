@@ -3,6 +3,7 @@ package com.zehhow.jikevideodownloader;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -12,6 +13,7 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
@@ -20,6 +22,8 @@ import com.zehhow.jikevideodownloader.recyclerView.TaskAdapter;
 import com.zehhow.jikevideodownloader.dao.SQLiteHelper;
 import com.zehhow.jikevideodownloader.dao.TaskBean;
 import com.zehhow.jikevideodownloader.dialog.AddTaskDialog;
+
+import java.io.File;
 import java.util.Vector;
 
 
@@ -149,5 +153,32 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "你拒绝了存储权限，无法继续操作", Toast.LENGTH_SHORT).show();
                 break;
         }
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        TaskBean task = taskAdapter.getCurrentTask();
+        switch (item.getItemId()) {
+            case 0:     // 删除
+                Toast.makeText(this, task.name, Toast.LENGTH_SHORT).show();
+                break;
+            case 1:     // 分享
+                shareVideo(task);
+                break;
+        }
+        return super.onContextItemSelected(item);
+    }
+
+    /**
+     * 分享视频到其它软件
+     * @param task 要分享的视频的TaskBean
+     */
+    private void shareVideo(TaskBean task) {
+        Uri uri = TaskAdapter.getUriForFile(new File(task.path, task.name));
+        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+        intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+        intent.setType("video/*");
+        intent.putExtra(Intent.EXTRA_STREAM, uri);
+        startActivity(Intent.createChooser(intent, "分享视频"));
     }
 }

@@ -8,6 +8,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v4.content.FileProvider;
 import android.support.v7.widget.RecyclerView;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.zehhow.jikevideodownloader.JkvdApplication;
 import com.zehhow.jikevideodownloader.R;
 import com.zehhow.jikevideodownloader.dao.TaskBean;
 import com.zehhow.jikevideodownloader.download.DownloadListener;
@@ -28,7 +30,17 @@ import java.util.Vector;
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
     private Vector<TaskBean> taskList;          // 下载任务列表
 
-    class TaskViewHolder extends RecyclerView.ViewHolder {
+    private int position;
+
+    /**
+     * 获取当前position所对应的TaskBean
+     * @return 当前position对应的TaskBean
+     */
+    public TaskBean getCurrentTask() {
+        return taskList.get(position);
+    }
+
+    class TaskViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener{
         View view;
         TextView txtName;
         ProgressBar progressBar;
@@ -40,6 +52,58 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             txtName = view.findViewById(R.id.name);
             progressBar = view.findViewById(R.id.progressBar);
             btnStartOrPause = view.findViewById(R.id.startOrPause);
+
+            view.setOnCreateContextMenuListener(this);
+
+            /* 点击已完成的任务项自动打开播放器 */
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    TaskBean task = getTaskByViewHolder(TaskViewHolder.this);
+                    if(task.status == TaskStatus.SUCCESS) {
+                        Context context = JkvdApplication.getContext();
+
+                        Intent openVideoPlayer = new Intent(Intent.ACTION_VIEW);
+                        openVideoPlayer.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        Uri uri = getUriForFile(new File(task.path, task.name));
+                        openVideoPlayer.setDataAndType(uri, "video/*");
+
+                        try {
+                            context.startActivity(openVideoPlayer);
+                        } catch (Exception e) {
+                            Toast.makeText(context, "没有默认播放器", Toast.LENGTH_SHORT).show();
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            });
+
+            /* 设置按钮点击事件 */
+            btnStartOrPause.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    TaskBean task = getTaskByViewHolder(TaskViewHolder.this);
+                    switch (task.status) {
+                        case PAUSED:            // 任务暂停，此时应开始下载
+                            startDownload(task);
+                            btnStartOrPause.setText("暂停");
+                            break;
+                        case DOWNLOADING:       // 任务下载中，此时应暂停下载
+                            task.downloadTask.pausedDownload();
+                            btnStartOrPause.setText("开始");
+                            break;
+                    }
+                }
+            });
+        }
+
+        /**
+         * 设置弹出的菜单项
+         */
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+            menu.add(ContextMenu.NONE, 0, ContextMenu.NONE, "删除");
+            menu.add(ContextMenu.NONE, 1, ContextMenu.NONE, "分享");
         }
     }
 
@@ -52,7 +116,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     /**
-     * 添加新的下载任务项至
+     * 添加新的下载任务项至任务列表
      * @param task 任务相关信息
      * @param startNow 是否立即开始任务
      */
@@ -83,59 +147,8 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     public TaskViewHolder onCreateViewHolder(@NonNull final ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.task_item_layout, viewGroup, false);
-        final TaskViewHolder taskViewHolder = new TaskViewHolder(view);
 
-        /* 点击已完成的任务项自动打开播放器 */
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                TaskBean task = getTaskByViewHolder(taskViewHolder);
-                if(task.status == TaskStatus.SUCCESS) {
-                    Context context = viewGroup.getContext();
-                    File file = new File(task.path, task.name);
-                    Intent openVideoPlayer = new Intent(Intent.ACTION_VIEW);
-
-                    // 安卓7以上版本需调用内容提供器
-                    Uri uri;
-                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
-                        openVideoPlayer.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    }
-                    else
-                        uri = Uri.fromFile(file);
-
-                    openVideoPlayer.setDataAndType(uri, "video/*");
-                    try {
-                        context.startActivity(openVideoPlayer);
-                    } catch (Exception e) {
-                        Toast.makeText(context, "没有默认播放器", Toast.LENGTH_SHORT).show();
-                        e.printStackTrace();
-                    }
-                }
-            }
-        });
-
-        /* 设置按钮点击事件 */
-        taskViewHolder.btnStartOrPause.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                TaskBean task = getTaskByViewHolder(taskViewHolder);
-                switch (task.status) {
-                    case PAUSED:            // 任务暂停，此时应开始下载
-                        startDownload(task);
-                        //task.status = TaskStatus.DOWNLOADING;
-                        taskViewHolder.btnStartOrPause.setText("暂停");
-                        break;
-                    case DOWNLOADING:       // 任务下载中，此时应暂停下载
-                        task.downloadTask.pausedDownload();
-                        //task.status = TaskStatus.PAUSED;
-                        taskViewHolder.btnStartOrPause.setText("开始");
-                        break;
-                }
-            }
-        });
-
-        return taskViewHolder;
+        return new TaskViewHolder(view);
     }
 
     /**
@@ -149,7 +162,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     @Override
-    public void onBindViewHolder(@NonNull TaskViewHolder viewHolder, int i) {
+    public void onBindViewHolder(@NonNull final TaskViewHolder viewHolder, int i) {
         TaskBean task = taskList.get(i);
         viewHolder.txtName.setText(task.name);
         viewHolder.progressBar.setProgress(task.progress);
@@ -176,10 +189,43 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         }
 
         viewHolder.btnStartOrPause.setText(displayText);
+
+        // 设置长按事件
+        viewHolder.view.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                position = viewHolder.getAdapterPosition();
+                return false;
+            }
+        });
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull TaskViewHolder viewHolder) {
+        // 取消长按事件
+        viewHolder.view.setOnLongClickListener(null);
     }
 
     @Override
     public int getItemCount() {
         return taskList.size();
+    }
+
+    /**
+     * 获取文件路径所对应的Uri
+     * @param file 文件路径
+     * @return 对应的Uri
+     */
+    public static Uri getUriForFile(File file) {
+        // 安卓7以上版本需调用内容提供器
+        Uri uri;
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            Context context = JkvdApplication.getContext();
+            uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
+        }
+        else
+            uri = Uri.fromFile(file);
+
+        return uri;
     }
 }
