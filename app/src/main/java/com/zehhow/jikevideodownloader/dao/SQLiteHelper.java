@@ -15,12 +15,14 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     private static final String CREATE_TASK =
             "CREATE TABLE Task ("
-            + "urlHashCode INTEGER PRIMARY KEY, "
+            + "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+            + "urlHashCode, "
             + "url TEXT, "
             + "name TEXT, "
             + "path TEXT, "
             + "totalLength INTEGER, "
-            + "downloadedLength INTEGER);";
+            + "downloadedLength INTEGER, "
+            + "progress INTEGER);";
 
     /**
      * 获取实例
@@ -35,7 +37,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
      */
     public static void init(Context context) {
         if(instance != null) return;
-        instance = new SQLiteHelper(context, "task", null, 2);
+        instance = new SQLiteHelper(context, "task", null, 3);
         db = instance.getReadableDatabase();
     }
 
@@ -112,7 +114,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
      * @return 所有任务记录
      */
     public Vector<TaskBean> queryAllTasks() {
-        Cursor cursor = db.rawQuery("SELECT * FROM Task;", null);
+        Cursor cursor = db.rawQuery("SELECT * FROM Task ORDER BY id ASC;", null);
         Vector<TaskBean> tasks = new Vector<>();
 
         if(cursor.moveToFirst()) {
@@ -124,8 +126,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
                 task.path = cursor.getString(cursor.getColumnIndex("path"));
                 task.totalLength = cursor.getLong(cursor.getColumnIndex("totalLength"));
                 task.downloadedLength = cursor.getLong(cursor.getColumnIndex("downloadedLength"));
-                task.progress = (int)(task.downloadedLength * 100 / task.totalLength);
-                task.status = task.progress == 100 ? TaskStatus.SUCCESS : TaskStatus.PAUSED;
+                task.progress = cursor.getInt(cursor.getColumnIndex("progress"));
+                task.status = task.progress >= 100 ? TaskStatus.SUCCESS : TaskStatus.PAUSED;
                 tasks.add(task);
             } while(cursor.moveToNext());
         }
@@ -139,8 +141,8 @@ public class SQLiteHelper extends SQLiteOpenHelper {
      * @param urlHashCode 任务的下载地址的hashCode
      * @param downloadedLength 最新的文件已下载长度
      */
-    public void updateProgress(int urlHashCode, long downloadedLength) {
-        db.execSQL("UPDATE Task SET downloadedLength = ? WHERE urlHashCode = ?;",
-                new String[]{downloadedLength + "", urlHashCode + ""});
+    public void updateProgress(int urlHashCode, long downloadedLength, int progress) {
+        db.execSQL("UPDATE Task SET downloadedLength = ?, progress = ? WHERE urlHashCode = ?;",
+                new String[]{downloadedLength + "",progress + "", urlHashCode + ""});
     }
 }

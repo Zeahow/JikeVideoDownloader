@@ -82,7 +82,7 @@ public class AddTaskDialog {
                         TaskBean task = new TaskBean(url,
                                 nameTxt.getText().toString(),
                                 pathTxt.getText().toString());
-                        ((MainActivity) activity).getTaskAdapter().addTaskItem(task, false);
+                        ((MainActivity) activity).getTaskAdapter().addTaskItem(task, true);
                     }
                 }).create();
 

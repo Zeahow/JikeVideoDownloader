@@ -1,6 +1,7 @@
 package com.zehhow.jikevideodownloader.download;
 
 import android.util.Log;
+import android.widget.Button;
 import android.widget.ProgressBar;
 
 import com.zehhow.jikevideodownloader.dao.TaskBean;
@@ -9,6 +10,7 @@ public class DownloadListener {
 
     private TaskBean task;
     private ProgressBar progressBar;
+    private Button button;
 
     /**
      * 构造函数
@@ -27,6 +29,13 @@ public class DownloadListener {
     }
 
     /**
+     * 绑定按钮，用以显示当前状态
+     */
+    public void setButton(Button button) {
+        this.button = button;
+    }
+
+    /**
      * 下载中
      * @param progress 下载进度
      */
@@ -34,6 +43,7 @@ public class DownloadListener {
         task.progress = progress;
         if(progressBar != null)
             progressBar.setProgress(progress);
+        Log.d("JKVD", " Progress " + progress + ": " + task.name);
     }
 
     /**
@@ -41,6 +51,8 @@ public class DownloadListener {
      */
     void onSuceess() {
         task.status = TaskStatus.SUCCESS;
+        if(button != null)
+            button.setText("已完成");
         Log.d("JKVD", " Success: " + task.name);
     }
 
@@ -49,6 +61,8 @@ public class DownloadListener {
      */
     void onFailed() {
         task.status = TaskStatus.FAILED;
+        if(button != null)
+            button.setText("下载失败");
         Log.d("JKVD", " Failed: " + task.name);
     }
 

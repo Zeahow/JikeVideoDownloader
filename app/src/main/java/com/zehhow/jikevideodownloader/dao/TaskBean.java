@@ -21,7 +21,7 @@ public class TaskBean {
     // 任务下载进度
     public int progress = 0;
     // 任务状态
-    public TaskStatus status = TaskStatus.NORMAL;
+    public TaskStatus status = TaskStatus.PAUSED;
     // 所绑定的下载器
     public DownloadTask downloadTask = null;
     // 所绑定的下载侦听

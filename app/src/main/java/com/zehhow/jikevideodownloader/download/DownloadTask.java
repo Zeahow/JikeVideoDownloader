@@ -18,7 +18,7 @@ import okhttp3.Response;
 public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
 
     private DownloadListener listener;
-    private TaskStatus taskStatus = TaskStatus.NORMAL;
+    private TaskStatus taskStatus = TaskStatus.DOWNLOADING;
     private TaskBean task;          // 任务信息
     private int lastProgress = 0;   // 上一次的下载进度
 
@@ -113,7 +113,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
                 curDownloadedLength = downloadTs(savedFile, tsUrls.get(tsIndex), curDownloadedLength);
 
                 // 如果下载状态不正常则退出下载
-                if(taskStatus != TaskStatus.NORMAL) return taskStatus;
+                if(taskStatus != TaskStatus.DOWNLOADING) return taskStatus;
                 if(curDownloadedLength == -1) return TaskStatus.FAILED;
 
                 // 此时当前的ts分段应已下载完毕，进行下一个分段的下载
@@ -162,7 +162,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
             // 读取数据并写入文件
             while((len = is.read(b)) != -1) {
                 // 如果下载状态不正常则退出下载
-                if(taskStatus != TaskStatus.NORMAL) return -1;
+                if(taskStatus != TaskStatus.DOWNLOADING) return -1;
 
                 savedFile.write(b, 0, len);
                 downloadedLength += len;
@@ -197,7 +197,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
             Log.d("JKVD", " Progress: " + progress + " | " + task.name);
             Log.d("JKVD", " DownloadedLength: " + task.downloadedLength + " | " + task.name);
             listener.onProgress(progress);
-            SQLiteHelper.getInstance().updateProgress(task.urlHashCode, task.downloadedLength);
+            SQLiteHelper.getInstance().updateProgress(task.urlHashCode, task.downloadedLength, progress);
             lastProgress = progress;
         }
     }
@@ -228,12 +228,6 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
             default:
                 break;
         }
-    }
-
-    @Override
-    protected void onCancelled() {
-        super.onCancelled();
-        taskStatus = TaskStatus.CANCELED;
     }
 
     /**

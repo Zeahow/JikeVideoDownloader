@@ -50,17 +50,25 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
      * @param startNow 是否立即开始任务
      */
     public void addTaskItem(TaskBean task, boolean startNow) {
-        taskList.add(task);
-        notifyItemInserted(taskList.size());
-
+        taskList.add(0 ,task);
+        notifyItemInserted(0);
         DownloadListener downloadListener = new DownloadListener(task);
-        DownloadTask downloadTask = new DownloadTask(downloadListener);
-        task.setDownloadTask(downloadTask);
         task.setDownloadListener(downloadListener);
+
         if(startNow) {
-            task.status = TaskStatus.NORMAL;
-            downloadTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, task);
+            startDownload(task);
         }
+    }
+
+    /**
+     * 开始下载
+     * @param task 下载任务信息
+     */
+    private void startDownload(TaskBean task) {
+        task.status = TaskStatus.DOWNLOADING;
+        DownloadTask downloadTask = new DownloadTask(task.downloadListener);
+        task.setDownloadTask(downloadTask);
+        downloadTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, task);
     }
 
     @NonNull
@@ -77,14 +85,14 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 int position = taskViewHolder.getAdapterPosition();
                 TaskBean task = taskList.get(position);
                 switch (task.status) {
-                    case PAUSED:    // 任务暂停
-                        task.downloadTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, task);
-                        task.status = TaskStatus.NORMAL;
+                    case PAUSED:            // 任务暂停，此时应开始下载
+                        startDownload(task);
+                        //task.status = TaskStatus.DOWNLOADING;
                         taskViewHolder.btnStartOrPause.setText("暂停");
                         break;
-                    case NORMAL:    // 任务下载中
-                        task.downloadTask.cancel(false);
-                        task.status = TaskStatus.PAUSED;
+                    case DOWNLOADING:       // 任务下载中，此时应暂停下载
+                        task.downloadTask.pausedDownload();
+                        //task.status = TaskStatus.PAUSED;
                         taskViewHolder.btnStartOrPause.setText("开始");
                         break;
                 }
@@ -100,20 +108,21 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         viewHolder.txtName.setText(task.name);
         viewHolder.progressBar.setProgress(task.progress);
         task.downloadListener.setProgressBar(viewHolder.progressBar);
+        task.downloadListener.setButton(viewHolder.btnStartOrPause);
 
         // 根据任务状态设置按钮文本
         String displayText;
         switch(task.status) {
-            case NORMAL:    // 任务下载中
+            case DOWNLOADING:   // 任务下载中
                 displayText = "暂停";
                 break;
-            case FAILED:    // 任务失败
+            case FAILED:        // 任务失败
                 displayText = "下载失败";
                 break;
-            case SUCCESS:   // 任务下载成功
-                displayText = "下载完成";
+            case SUCCESS:       // 任务下载成功
+                displayText = "已完成";
                 break;
-            case PAUSED:    // 任务已暂停
+            case PAUSED:        // 任务已暂停
                 displayText = "开始";
                 break;
             default:
