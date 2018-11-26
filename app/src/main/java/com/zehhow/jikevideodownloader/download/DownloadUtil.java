@@ -11,14 +11,14 @@ import okhttp3.Headers;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class DownloadUtil {
+class DownloadUtil {
     /**
      * 获取视频真实的m3u8地址
      * @param url 视频网页地址
      * @return 视频的mu8地址
      */
 
-    public static String getM3u8Url(String url) {
+    static String getM3u8Url(String url) {
         if(url == null) return null;
 
         String prefix = "https://m.okjike.com/";

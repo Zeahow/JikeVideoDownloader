@@ -1,7 +1,12 @@
 package com.zehhow.jikevideodownloader.recyclerView;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.content.FileProvider;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +14,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.zehhow.jikevideodownloader.R;
 import com.zehhow.jikevideodownloader.dao.TaskBean;
@@ -16,6 +22,7 @@ import com.zehhow.jikevideodownloader.download.DownloadListener;
 import com.zehhow.jikevideodownloader.download.DownloadTask;
 import com.zehhow.jikevideodownloader.download.TaskStatus;
 
+import java.io.File;
 import java.util.Vector;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
@@ -73,17 +80,46 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
 
     @NonNull
     @Override
-    public TaskViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+    public TaskViewHolder onCreateViewHolder(@NonNull final ViewGroup viewGroup, int i) {
         View view = LayoutInflater.from(viewGroup.getContext())
                 .inflate(R.layout.task_item_layout, viewGroup, false);
         final TaskViewHolder taskViewHolder = new TaskViewHolder(view);
+
+        /* 点击已完成的任务项自动打开播放器 */
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                TaskBean task = getTaskByViewHolder(taskViewHolder);
+                if(task.status == TaskStatus.SUCCESS) {
+                    Context context = viewGroup.getContext();
+                    File file = new File(task.path, task.name);
+                    Intent openVideoPlayer = new Intent(Intent.ACTION_VIEW);
+
+                    // 安卓7以上版本需调用内容提供器
+                    Uri uri;
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
+                        openVideoPlayer.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    }
+                    else
+                        uri = Uri.fromFile(file);
+
+                    openVideoPlayer.setDataAndType(uri, "video/*");
+                    try {
+                        context.startActivity(openVideoPlayer);
+                    } catch (Exception e) {
+                        Toast.makeText(context, "没有默认播放器", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
 
         /* 设置按钮点击事件 */
         taskViewHolder.btnStartOrPause.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int position = taskViewHolder.getAdapterPosition();
-                TaskBean task = taskList.get(position);
+                TaskBean task = getTaskByViewHolder(taskViewHolder);
                 switch (task.status) {
                     case PAUSED:            // 任务暂停，此时应开始下载
                         startDownload(task);
@@ -100,6 +136,16 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         });
 
         return taskViewHolder;
+    }
+
+    /**
+     * 根据传入的ViewHolder获取对应的TaskBean
+     * @param viewHolder 传入的ViewHolder
+     * @return 对应的TaskBean
+     */
+    private TaskBean getTaskByViewHolder(TaskViewHolder viewHolder) {
+        int position = viewHolder.getAdapterPosition();
+        return taskList.get(position);
     }
 
     @Override

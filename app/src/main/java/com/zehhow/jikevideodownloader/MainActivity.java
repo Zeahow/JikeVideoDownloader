@@ -8,6 +8,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -80,11 +81,15 @@ public class MainActivity extends AppCompatActivity {
      */
     private void initTaskList() {
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
-        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-        recyclerView.setLayoutManager(layoutManager);
+        // 设置布局
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        // 设置适配器
         taskAdapter = new TaskAdapter(new Vector<TaskBean>());
         recyclerView.setAdapter(taskAdapter);
+        // 设置滑动侦听器，控制悬浮按钮
         recyclerView.addOnScrollListener(new RecyclerScrollListener((FloatingActionButton) findViewById(R.id.fab)));
+        // 设置分割线
+        recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
 
         final Vector<TaskBean> taskList = SQLiteHelper.getInstance().queryAllTasks();
         runOnUiThread(new Runnable() {
