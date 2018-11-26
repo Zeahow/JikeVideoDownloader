@@ -1,4 +1,4 @@
-package com.zehhow.jikevideodownloader.adapter;
+package com.zehhow.jikevideodownloader.recyclerView;
 
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;

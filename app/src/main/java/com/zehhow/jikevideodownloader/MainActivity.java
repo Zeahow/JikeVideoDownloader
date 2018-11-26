@@ -14,7 +14,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.Toast;
 
-import com.zehhow.jikevideodownloader.adapter.TaskAdapter;
+import com.zehhow.jikevideodownloader.recyclerView.RecyclerScrollListener;
+import com.zehhow.jikevideodownloader.recyclerView.TaskAdapter;
 import com.zehhow.jikevideodownloader.dao.SQLiteHelper;
 import com.zehhow.jikevideodownloader.dao.TaskBean;
 import com.zehhow.jikevideodownloader.dialog.AddTaskDialog;
@@ -83,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setLayoutManager(layoutManager);
         taskAdapter = new TaskAdapter(new Vector<TaskBean>());
         recyclerView.setAdapter(taskAdapter);
-
+        recyclerView.addOnScrollListener(new RecyclerScrollListener((FloatingActionButton) findViewById(R.id.fab)));
 
         final Vector<TaskBean> taskList = SQLiteHelper.getInstance().queryAllTasks();
         runOnUiThread(new Runnable() {
