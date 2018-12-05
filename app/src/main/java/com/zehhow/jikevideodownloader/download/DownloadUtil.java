@@ -1,9 +1,14 @@
 package com.zehhow.jikevideodownloader.download;
 
+import android.content.Context;
+import android.net.Uri;
+import android.os.Build;
+import android.support.v4.content.FileProvider;
 import android.util.Log;
 
 import com.zehhow.jikevideodownloader.okHttp.HttpClient;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
 
@@ -11,7 +16,7 @@ import okhttp3.Headers;
 import okhttp3.Request;
 import okhttp3.Response;
 
-class DownloadUtil {
+public class DownloadUtil {
     /**
      * 获取视频真实的m3u8地址
      * @param url 视频网页地址
@@ -85,6 +90,10 @@ class DownloadUtil {
             return null;
         }
 
+        // 判断获取到的是否是ts分段的地址。注：第5行才是第一个ts分段的下载地址
+        if(strs.length <= 6 || !strs[5].endsWith(".ts"))
+            return null;
+
         // 以#开头的为其它说明字段
         for (String s : strs) {
             if (s.startsWith("#")) continue;
@@ -130,5 +139,22 @@ class DownloadUtil {
             lengths.add(getVedioLength(url));
 
         return lengths;
+    }
+
+
+    /**
+     * 获取文件路径所对应的Uri
+     * @param file 文件路径
+     * @return 对应的Uri
+     */
+    public static Uri getUriForFile(Context context, File file) {
+        // 安卓7以上版本需调用内容提供器
+        Uri uri;
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+            uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
+        else
+            uri = Uri.fromFile(file);
+
+        return uri;
     }
 }

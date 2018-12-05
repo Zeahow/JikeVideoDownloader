@@ -65,7 +65,7 @@ public class AddTaskDialog {
                     public void onClick(DialogInterface dialog, int which) {
                         String url = urlTxt.getText().toString();
                         if(url.isEmpty()) return;
-                        Log.d("JKVD", "URL: " + url);
+                        Log.d("JKVD", "Original URL: " + url);
 
                         // 若未指定视频名称则默认设置为当前时间.mp4
                         if(nameTxt.getText().toString().isEmpty()) {
@@ -78,7 +78,6 @@ public class AddTaskDialog {
                                     Toast.LENGTH_SHORT).show();
                         }
 
-                        Log.d("JKVD", "------URL Befor AsyncTask: " + url);
                         TaskBean task = new TaskBean(url,
                                 nameTxt.getText().toString(),
                                 pathTxt.getText().toString());

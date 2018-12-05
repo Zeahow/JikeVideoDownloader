@@ -4,11 +4,12 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="15sp"
-    android:layout_marginTop="5sp">
+    android:layout_marginTop="5sp"
+    android:layout_marginBottom="5sp">
 
     <LinearLayout
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -24,7 +25,7 @@
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layerType="hardware"
             android:max="100"
             android:visibility="visible" />
@@ -34,11 +35,10 @@
     <Button
         android:id="@+id/startOrPause"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:background="@android:color/transparent"
         android:gravity="center_vertical|center_horizontal"
         android:text="@string/start"
-        android:textColor="@color/colorPrimary"
-        tools:layout_width="wrap_content" />
+        android:textColor="@color/colorPrimary" />
 
 </LinearLayout>

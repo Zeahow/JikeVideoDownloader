@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.zehhow.jikevideodownloader.download.DownloadUtil;
 import com.zehhow.jikevideodownloader.recyclerView.RecyclerScrollListener;
 import com.zehhow.jikevideodownloader.recyclerView.TaskAdapter;
 import com.zehhow.jikevideodownloader.dao.SQLiteHelper;
@@ -88,21 +89,16 @@ public class MainActivity extends AppCompatActivity {
         // 设置布局
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         // 设置适配器
-        taskAdapter = new TaskAdapter(new Vector<TaskBean>());
+        taskAdapter = new TaskAdapter(new Vector<TaskBean>(), this);
         recyclerView.setAdapter(taskAdapter);
         // 设置滑动侦听器，控制悬浮按钮
         recyclerView.addOnScrollListener(new RecyclerScrollListener((FloatingActionButton) findViewById(R.id.fab)));
         // 设置分割线
         recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
 
-        final Vector<TaskBean> taskList = SQLiteHelper.getInstance().queryAllTasks();
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                for(TaskBean task : taskList)
-                    taskAdapter.addTaskItem(task, false);
-            }
-        });
+        Vector<TaskBean> taskList = SQLiteHelper.getInstance().queryAllTasks();
+        for(TaskBean task : taskList)
+            taskAdapter.addTaskItem(task, false);
     }
 
     /**
@@ -174,7 +170,7 @@ public class MainActivity extends AppCompatActivity {
      * @param task 要分享的视频的TaskBean
      */
     private void shareVideo(TaskBean task) {
-        Uri uri = TaskAdapter.getUriForFile(new File(task.path, task.name));
+        Uri uri = DownloadUtil.getUriForFile(this, new File(task.path, task.name));
         Intent intent = new Intent(android.content.Intent.ACTION_SEND);
         intent.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
         intent.setType("video/*");

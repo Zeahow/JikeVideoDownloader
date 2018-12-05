@@ -17,17 +17,19 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.zehhow.jikevideodownloader.JkvdApplication;
 import com.zehhow.jikevideodownloader.R;
+import com.zehhow.jikevideodownloader.dao.SQLiteHelper;
 import com.zehhow.jikevideodownloader.dao.TaskBean;
 import com.zehhow.jikevideodownloader.download.DownloadListener;
 import com.zehhow.jikevideodownloader.download.DownloadTask;
+import com.zehhow.jikevideodownloader.download.DownloadUtil;
 import com.zehhow.jikevideodownloader.download.TaskStatus;
 
 import java.io.File;
 import java.util.Vector;
 
 public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
+    private Context context;
     private Vector<TaskBean> taskList;          // 下载任务列表
 
     private int position;
@@ -61,11 +63,11 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 public void onClick(View v) {
                     TaskBean task = getTaskByViewHolder(TaskViewHolder.this);
                     if(task.status == TaskStatus.SUCCESS) {
-                        Context context = JkvdApplication.getContext();
-
+                        // 调用系统的视频播放器
                         Intent openVideoPlayer = new Intent(Intent.ACTION_VIEW);
-                        openVideoPlayer.setFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        Uri uri = getUriForFile(new File(task.path, task.name));
+                        openVideoPlayer.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        openVideoPlayer.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        Uri uri = DownloadUtil.getUriForFile(context, new File(task.path, task.name));
                         openVideoPlayer.setDataAndType(uri, "video/*");
 
                         try {
@@ -111,8 +113,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
      * 构造函数
      * @param taskList 下载任务列表
      */
-    public TaskAdapter(Vector<TaskBean> taskList) {
+    public TaskAdapter(Vector<TaskBean> taskList, Context context) {
         this.taskList = taskList;
+        this.context = context;
     }
 
     /**
@@ -121,14 +124,39 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
      * @param startNow 是否立即开始任务
      */
     public void addTaskItem(TaskBean task, boolean startNow) {
+        // 如果任务已存在，则不添加任务
+        if(existTask(task.urlHashCode)) {
+            Toast.makeText(context, "任务已存在", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // 添加至界面
         taskList.add(0 ,task);
         notifyItemInserted(0);
         DownloadListener downloadListener = new DownloadListener(task);
         task.setDownloadListener(downloadListener);
 
+        // 若数据库中不存在该任务，则添加至数据库
+        if(!SQLiteHelper.getInstance().existTask(task.urlHashCode))
+            SQLiteHelper.getInstance().addTask(task);
+
+        // 立即开始下载
         if(startNow) {
             startDownload(task);
         }
+    }
+
+    /***
+     * 判断任务列表中是否存在该任务
+     * @param urlHashCode 任务下载链接的hashCode
+     * @return 是否存在
+     */
+    private boolean existTask(int urlHashCode) {
+        for(TaskBean task : taskList)
+            if(task.urlHashCode == urlHashCode)
+                return true;
+
+        return false;
     }
 
     /**
@@ -209,23 +237,5 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     @Override
     public int getItemCount() {
         return taskList.size();
-    }
-
-    /**
-     * 获取文件路径所对应的Uri
-     * @param file 文件路径
-     * @return 对应的Uri
-     */
-    public static Uri getUriForFile(File file) {
-        // 安卓7以上版本需调用内容提供器
-        Uri uri;
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            Context context = JkvdApplication.getContext();
-            uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
-        }
-        else
-            uri = Uri.fromFile(file);
-
-        return uri;
     }
 }

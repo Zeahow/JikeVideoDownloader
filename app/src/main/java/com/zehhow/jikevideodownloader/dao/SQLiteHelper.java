@@ -91,6 +91,22 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     }
 
     /**
+     * 判断数据库是否存在某个任务
+     * @param urlHashCode 任务下载地址的hashCode
+     * @return 是否存在
+     */
+    public boolean existTask(int urlHashCode) {
+        if(urlHashCode == 0) return false;
+
+        boolean exist = false;
+        Cursor cursor = db.rawQuery("SELECT * FROM Task WHERE urlHashCode = ?;", new String[]{urlHashCode + ""});
+        if((cursor.moveToFirst()))
+            exist = true;
+        cursor.close();
+        return exist;
+    }
+
+    /**
      * 添加一条新的任务数据至数据库
      * @param task 任务类，包含任务地址等待
      */
@@ -134,6 +150,16 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
         cursor.close();
         return tasks;
+    }
+
+    /***
+     * 更新任务的总长度信息
+     * @param urlHashCode 任务的下载地址的hashCode
+     * @param totalLength 任务文件总长度
+     */
+    public void updateTotalLength(int urlHashCode, long totalLength) {
+        db.execSQL("UPDATE Task SET totalLength = ? WHERE urlHashCode = ?;",
+                new String[]{totalLength + "", urlHashCode + ""});
     }
 
     /**

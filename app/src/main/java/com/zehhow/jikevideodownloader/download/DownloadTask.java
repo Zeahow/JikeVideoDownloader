@@ -36,7 +36,6 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
         task = taskBeans[0];
         if(task.url == null || task.url.isEmpty()) return TaskStatus.FAILED;
 
-        Log.d("JKVD", "------URL After AsyncTask: " + task.url);
         // 判断目录是否存在，不存在则创建
         File file = new File(task.path);
         if(!file.exists()) {
@@ -65,10 +64,11 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
 
         // 获取所有ts分段的下载地址及文件长度大小
         Vector<String> tsUrls = DownloadUtil.getAllTsUrls(m3u8);
+        if(tsUrls == null) return TaskStatus.FAILED;
         Vector<Long> tsLengths = DownloadUtil.getVedioLength(tsUrls);
 
-        // 若任务在数据库中不存在，则添加任务记录至数据库
-        if(task.downloadedLength == -1) {
+        // 若数据库中不存在总长度数据，则更新总长度至数据库
+        if(task.totalLength <= 0) {
             task.downloadedLength = 0;
             // 计算所有ts分段的总长度
             task.totalLength = 0;
@@ -76,7 +76,8 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
                 task.totalLength += l;
             }
             if(task.totalLength == 0) return TaskStatus.FAILED;
-            SQLiteHelper.getInstance().addTask(task);
+            SQLiteHelper.getInstance().updateTotalLength(task.urlHashCode, 0);
+            SQLiteHelper.getInstance().updateProgress(task.urlHashCode, 0, 0);
         }
 
         // 如果文件被删除则重新下载
