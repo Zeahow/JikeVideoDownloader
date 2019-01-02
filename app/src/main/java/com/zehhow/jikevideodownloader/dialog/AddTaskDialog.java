@@ -24,7 +24,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 public class AddTaskDialog {
-    private Activity activity;
+    private final Activity activity;
 
     public AddTaskDialog(Activity activity) {
         this.activity = activity;

@@ -13,11 +13,13 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
 import com.zehhow.jikevideodownloader.download.DownloadUtil;
+import com.zehhow.jikevideodownloader.download.TaskStatus;
 import com.zehhow.jikevideodownloader.recyclerView.RecyclerScrollListener;
 import com.zehhow.jikevideodownloader.recyclerView.TaskAdapter;
 import com.zehhow.jikevideodownloader.dao.SQLiteHelper;
@@ -29,12 +31,7 @@ import java.util.Vector;
 
 
 public class MainActivity extends AppCompatActivity {
-    // 悬浮按钮的状态
-    private enum FabState {
-        ADD,        // 新增任务
-        DELETE      // 删除任务
-    }
-    private FabState fabState = FabState.ADD;
+
     private TaskAdapter taskAdapter;
 
     public TaskAdapter getTaskAdapter() {
@@ -52,15 +49,8 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!checkPermission()) return;
-                switch (fabState) {
-                    case ADD:
-                        addTask(null);
-                        break;
-                    case DELETE:
-                        deleteTask();
-                        break;
-                }
+                if(noPermission()) return;
+                addTask(null);
             }
         });
 
@@ -106,33 +96,25 @@ public class MainActivity extends AppCompatActivity {
      * @param url 下载地址
      */
     private void addTask(String url) {
-        if(!checkPermission()) return;
+        if(noPermission()) return;
         new AddTaskDialog(this).show(url);
-    }
-
-    /**
-     * 删除下载任务
-     */
-    private void deleteTask() {
-        if(!checkPermission()) return;
-        //Todo
     }
 
     /**
      * 权限检查
      * @return 是否拥有权限
      */
-    private boolean checkPermission() {
+    private boolean noPermission() {
         // 安卓6以上版本进行权限检查
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             String permission = Manifest.permission.WRITE_EXTERNAL_STORAGE;
             if(checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{permission}, 1);
-                return false;
+                return true;
             }
         }
 
-        return true;
+        return false;
     }
 
     /**
@@ -151,12 +133,17 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * 弹出菜单点击事件
+     * @param item 菜单项，0为删除，1为分享
+     * @return 是否停止响应流程
+     */
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         TaskBean task = taskAdapter.getCurrentTask();
         switch (item.getItemId()) {
             case 0:     // 删除
-                Toast.makeText(this, task.name, Toast.LENGTH_SHORT).show();
+                deleteTask(task);
                 break;
             case 1:     // 分享
                 shareVideo(task);
@@ -176,5 +163,24 @@ public class MainActivity extends AppCompatActivity {
         intent.setType("video/*");
         intent.putExtra(Intent.EXTRA_STREAM, uri);
         startActivity(Intent.createChooser(intent, "分享视频"));
+    }
+
+    /**
+     * 删除任务
+     * @param task 任务信息
+     */
+    private void deleteTask(TaskBean task) {
+        // 任务下载中则取消下载
+        if(task.status == TaskStatus.DOWNLOADING)
+            task.downloadTask.cancelDownload();
+
+         // 删除任务文件
+        File file = new File(task.path, task.name);
+        if (!file.exists() || !file.delete())
+            Log.d("JKVD", " Failed to delete | " + file.getPath());
+
+        // 从任务列表界面和数据库中删除
+        taskAdapter.deleteTaskItem(task);
+        SQLiteHelper.getInstance().deleteTask(task.urlHashCode);
     }
 }
