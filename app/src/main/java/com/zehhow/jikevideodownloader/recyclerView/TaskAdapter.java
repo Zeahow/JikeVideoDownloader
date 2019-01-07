@@ -4,9 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.v4.content.FileProvider;
 import android.support.v7.widget.RecyclerView;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -62,20 +60,19 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                 @Override
                 public void onClick(View v) {
                     TaskBean task = getTaskByViewHolder(TaskViewHolder.this);
-                    if(task.status == TaskStatus.SUCCESS) {
-                        // 调用系统的视频播放器
-                        Intent openVideoPlayer = new Intent(Intent.ACTION_VIEW);
-                        openVideoPlayer.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                        openVideoPlayer.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        Uri uri = DownloadUtil.getUriForFile(context, new File(task.path, task.name));
-                        openVideoPlayer.setDataAndType(uri, "video/*");
+                    if(task.status != TaskStatus.SUCCESS) return;
+                    // 调用系统的视频播放器播放选中的视频
+                    Intent openVideoPlayer = new Intent(Intent.ACTION_VIEW);
+                    openVideoPlayer.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    openVideoPlayer.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    Uri uri = DownloadUtil.getUriForFile(context, new File(task.path, task.name));
+                    openVideoPlayer.setDataAndType(uri, "video/*");
 
-                        try {
-                            context.startActivity(openVideoPlayer);
-                        } catch (Exception e) {
-                            Toast.makeText(context, "没有默认播放器", Toast.LENGTH_SHORT).show();
-                            e.printStackTrace();
-                        }
+                    try {
+                        context.startActivity(openVideoPlayer);
+                    } catch (Exception e) {
+                        Toast.makeText(context, "没有默认播放器", Toast.LENGTH_SHORT).show();
+                        e.printStackTrace();
                     }
                 }
             });
@@ -104,8 +101,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
          */
         @Override
         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+            if(getCurrentTask().status == TaskStatus.SUCCESS)   // 下载完成才可分享
+                menu.add(ContextMenu.NONE, 1, ContextMenu.NONE, "分享");
             menu.add(ContextMenu.NONE, 0, ContextMenu.NONE, "删除");
-            menu.add(ContextMenu.NONE, 1, ContextMenu.NONE, "分享");
         }
     }
 
@@ -144,6 +142,18 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         if(startNow) {
             startDownload(task);
         }
+    }
+
+    /**
+     * 删除任务项
+     * @param task 待删除的任务的信息
+     */
+    public void deleteTaskItem(TaskBean task) {
+        int index = taskList.indexOf(task);
+        if(index == -1) return;
+        taskList.remove(index);
+        notifyItemRemoved(index);
+        notifyDataSetChanged();
     }
 
     /***

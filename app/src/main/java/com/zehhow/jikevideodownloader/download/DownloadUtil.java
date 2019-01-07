@@ -49,7 +49,7 @@ public class DownloadUtil {
                 return null;
             }
 
-            m3u8Url = m3u8Url.substring(beginIndex + 3, m3u8Url.indexOf("\"}"));
+            m3u8Url = m3u8Url.substring(beginIndex + 3, m3u8Url.indexOf("\","));
             Log.d("JKVD", "RealURL: " + m3u8Url);
 
             response.body().close();
@@ -76,7 +76,8 @@ public class DownloadUtil {
             return urls;
         }
 
-        String prefix = "https://media-txcdn.ruguoapp.com/";
+        // 获取ts分段地址前缀
+        String prefix = m3u8Url.substring(0, m3u8Url.lastIndexOf('/') + 1);
         String strs[];
 
         Request request = new Request.Builder().url(m3u8Url).build();

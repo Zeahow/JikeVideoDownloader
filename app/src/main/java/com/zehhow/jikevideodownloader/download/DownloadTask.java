@@ -195,7 +195,6 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
     protected void onProgressUpdate(Integer... values) {
         int progress = values[0];
         if(progress > lastProgress) {
-            Log.d("JKVD", " Progress: " + progress + " | " + task.name);
             Log.d("JKVD", " DownloadedLength: " + task.downloadedLength + " | " + task.name);
             listener.onProgress(progress);
             SQLiteHelper.getInstance().updateProgress(task.urlHashCode, task.downloadedLength, progress);
@@ -220,10 +219,6 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
                 listener.onPaused();
                 break;
             case CANCELED:
-                // 取消任务时删除文件，以及删除任务记录
-                File file = new File(task.path, task.name);
-                if(file.exists()) file.delete();
-                SQLiteHelper.getInstance().deleteTask(task.urlHashCode);
                 listener.onCanceled();
                 break;
             default:
