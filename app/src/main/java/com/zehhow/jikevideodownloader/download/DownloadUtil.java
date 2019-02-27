@@ -1,9 +1,11 @@
 package com.zehhow.jikevideodownloader.download;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
-import android.support.v4.content.FileProvider;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import com.zehhow.jikevideodownloader.okHttp.HttpClient;
@@ -152,9 +154,42 @@ public class DownloadUtil {
         // 安卓7以上版本需调用内容提供器
         Uri uri;
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
+            // 微信不支持FileProvider提供的Uri，需要到MediaStore中去查询
+            uri = getUriFromMediaStore(context, file.getAbsolutePath());
+            //uri = FileProvider.getUriForFile(context, context.getPackageName() + ".fileprovider", file);
         else
             uri = Uri.fromFile(file);
+
+        return uri;
+    }
+
+    /**
+     * 在MediaStore数据库中查询视频的Uri
+     * @param filePath 视频文件路径
+     * @return 对应的Uri
+     */
+    private static Uri getUriFromMediaStore(Context context, String filePath) {
+        Uri uri = null;
+        Cursor cursor = context.getContentResolver().query(MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                new String[]{MediaStore.Video.Media._ID}, MediaStore.Video.Media.DATA + "=?",
+                new String[]{filePath}, null);
+
+        // 数据库中存在则直接获取id，然后构建uri
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                int id = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
+                uri = Uri.withAppendedPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, "" + id);
+            }
+
+            cursor.close();
+        }
+
+        // 数据库中不存在则新插入一条
+        if (uri == null) {
+            ContentValues values = new ContentValues();
+            values.put(MediaStore.Video.Media.DATA, filePath);
+            uri = context.getContentResolver().insert(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, values);
+        }
 
         return uri;
     }
