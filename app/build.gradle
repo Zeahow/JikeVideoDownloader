@@ -20,8 +20,8 @@ android {
         applicationId "com.zehhow.jikevideodownloader"
         minSdkVersion 21
         targetSdkVersion 28
-        versionCode 3
-        versionName "1.1.2"
+        versionCode 4
+        versionName "1.2.27"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
@@ -41,7 +41,7 @@ android {
 
     android.applicationVariants.all { variant ->
         variant.outputs.all {
-            outputFileName = "${defaultConfig.applicationId}-${buildType.name}-v${defaultConfig.versionName}-${defaultConfig.versionCode}.apk"
+            outputFileName = "即刻视频助手_${buildType.name}_v${defaultConfig.versionName}_${defaultConfig.versionCode}.apk"
         }
     }
 }

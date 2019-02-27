@@ -43,6 +43,8 @@ public class DownloadListener {
         task.progress = progress;
         if(progressBar != null)
             progressBar.setProgress(progress);
+        if(button != null)
+            button.setText((progress > 0 ? progress + "%" : "启动中"));
         Log.d("JKVD", " Progress " + progress + ": " + task.name);
     }
 

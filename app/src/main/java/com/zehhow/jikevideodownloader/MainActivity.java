@@ -142,11 +142,11 @@ public class MainActivity extends AppCompatActivity {
     public boolean onContextItemSelected(MenuItem item) {
         TaskBean task = taskAdapter.getCurrentTask();
         switch (item.getItemId()) {
-            case 0:     // 删除
-                deleteTask(task);
-                break;
-            case 1:     // 分享
+            case 0:     // 分享
                 shareVideo(task);
+                break;
+            case 1:     // 删除
+                deleteTask(task);
                 break;
         }
         return super.onContextItemSelected(item);

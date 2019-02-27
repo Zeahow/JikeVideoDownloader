@@ -102,8 +102,9 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         @Override
         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
             if(getCurrentTask().status == TaskStatus.SUCCESS)   // 下载完成才可分享
-                menu.add(ContextMenu.NONE, 1, ContextMenu.NONE, "分享");
-            menu.add(ContextMenu.NONE, 0, ContextMenu.NONE, "删除");
+                menu.add(ContextMenu.NONE, 0, ContextMenu.NONE, "分享");
+
+            menu.add(ContextMenu.NONE, 1, ContextMenu.NONE, "删除");
         }
     }
 

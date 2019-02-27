@@ -20,7 +20,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
     private DownloadListener listener;
     private TaskStatus taskStatus = TaskStatus.DOWNLOADING;
     private TaskBean task;          // 任务信息
-    private int lastProgress = 0;   // 上一次的下载进度
+    private int lastProgress = -1;   // 上一次的下载进度
 
     public DownloadTask(DownloadListener listener) {
         this.listener = listener;
@@ -62,6 +62,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
             return TaskStatus.SUCCESS;
         }
 
+        publishProgress(0);
         // 获取所有ts分段的下载地址及文件长度大小
         Vector<String> tsUrls = DownloadUtil.getAllTsUrls(m3u8);
         if(tsUrls == null) return TaskStatus.FAILED;
@@ -76,7 +77,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
                 task.totalLength += l;
             }
             if(task.totalLength == 0) return TaskStatus.FAILED;
-            SQLiteHelper.getInstance().updateTotalLength(task.urlHashCode, 0);
+            SQLiteHelper.getInstance().updateTotalLength(task.urlHashCode, task.totalLength);
             SQLiteHelper.getInstance().updateProgress(task.urlHashCode, 0, 0);
         }
 
@@ -106,6 +107,8 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
         }
 
         try {
+            // 如果下载状态不正常则退出下载
+            if(taskStatus != TaskStatus.DOWNLOADING) return taskStatus;
             savedFile = new RandomAccessFile(file, "rw");
             savedFile.seek(task.downloadedLength);  // 定位文件指针至已下载处
 
@@ -158,7 +161,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
             if(response == null || response.body() == null) return -1;
 
             is = response.body().byteStream();
-            int len;
+            int len, progress;
             byte[] b = new byte[1024];
             // 读取数据并写入文件
             while((len = is.read(b)) != -1) {
@@ -169,7 +172,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
                 downloadedLength += len;
                 task.downloadedLength += len;
                 // 更新进度信息
-                int progress = (int)(task.downloadedLength * 100 / task.totalLength);
+                progress = (int)(task.downloadedLength * 100 / task.totalLength);
                 publishProgress(progress);
             }
 
