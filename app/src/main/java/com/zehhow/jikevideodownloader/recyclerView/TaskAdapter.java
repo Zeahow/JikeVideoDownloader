@@ -6,7 +6,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,7 +39,7 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         return taskList.get(position);
     }
 
-    class TaskViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener{
+    class TaskViewHolder extends RecyclerView.ViewHolder{
         View view;
         TextView txtName;
         ProgressBar progressBar;
@@ -52,8 +51,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
             txtName = view.findViewById(R.id.name);
             progressBar = view.findViewById(R.id.progressBar);
             btnStartOrPause = view.findViewById(R.id.startOrPause);
-
-            view.setOnCreateContextMenuListener(this);
 
             /* 点击已完成的任务项自动打开播放器 */
             view.setOnClickListener(new View.OnClickListener() {
@@ -94,17 +91,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
                     }
                 }
             });
-        }
-
-        /**
-         * 设置弹出的菜单项
-         */
-        @Override
-        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-            if(getCurrentTask().status == TaskStatus.SUCCESS)   // 下载完成才可分享
-                menu.add(ContextMenu.NONE, 0, ContextMenu.NONE, "分享");
-
-            menu.add(ContextMenu.NONE, 1, ContextMenu.NONE, "删除");
         }
     }
 

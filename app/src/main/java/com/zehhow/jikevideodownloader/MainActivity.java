@@ -14,6 +14,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -78,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView recyclerView = findViewById(R.id.recyclerView);
         // 设置布局
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        // 为recyclerView注册ContextMenu
+        registerForContextMenu(recyclerView);
         // 设置适配器
         taskAdapter = new TaskAdapter(new Vector<TaskBean>(), this);
         recyclerView.setAdapter(taskAdapter);
@@ -134,18 +137,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * 设置弹出的菜单项
+     */
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+        getMenuInflater().inflate(R.menu.recycler_view_menu, menu);
+        if(taskAdapter.getCurrentTask().status != TaskStatus.SUCCESS)   // 下载未完成的视频不可分享
+            menu.findItem(R.id.share_video).setVisible(false);
+    }
+
+    /**
      * 弹出菜单点击事件
-     * @param item 菜单项，0为删除，1为分享
+     * @param item 菜单项
      * @return 是否停止响应流程
      */
     @Override
     public boolean onContextItemSelected(MenuItem item) {
         TaskBean task = taskAdapter.getCurrentTask();
         switch (item.getItemId()) {
-            case 0:     // 分享
+            case R.id.share_video:      // 分享
                 shareVideo(task);
                 break;
-            case 1:     // 删除
+            case R.id.delete_task:      // 删除
                 deleteTask(task);
                 break;
         }

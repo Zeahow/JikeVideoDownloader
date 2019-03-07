@@ -20,7 +20,7 @@ public class DownloadTask extends AsyncTask<TaskBean, Integer, TaskStatus> {
     private DownloadListener listener;
     private TaskStatus taskStatus = TaskStatus.DOWNLOADING;
     private TaskBean task;          // 任务信息
-    private int lastProgress = -1;   // 上一次的下载进度
+    private int lastProgress = -1;  // 上一次的下载进度
 
     public DownloadTask(DownloadListener listener) {
         this.listener = listener;

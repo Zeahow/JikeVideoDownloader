@@ -7,4 +7,6 @@
     <string name="url">链接</string>
     <string name="gettingName">-! 点我获取名称 !-</string>
     <string name="start">开始</string>
+    <string name="share_video">分享视频</string>
+    <string name="delete_task">删除任务</string>
 </resources>
