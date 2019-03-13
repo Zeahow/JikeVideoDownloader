@@ -9,4 +9,13 @@
     <string name="start">开始</string>
     <string name="share_video">分享视频</string>
     <string name="delete_task">删除任务</string>
+    <string name="tutorial">使用教程</string>
+    <string name="tutorial_url">https://m.okjike.com/originalPosts/5c7ba130a73e79001881aed7</string>
+    <string name="feedback">反馈Bug与建议</string>
+    <string name="feedback_url">https://github.com/Zehhow/JikeVideoDownloader/issues</string>
+    <string name="empty_view_tip">空空如也</string>
+    <string name="click_me_to_show_tutorial"><u>不会下载？点我查看教程</u></string>
+    <string name="about">关于</string>
+    <string name="donate">捐赠</string>
+    <string name="donate_url">alipayqr://platformapi/startapp?saId=10000007&amp;qrcode=https://qr.alipay.com/fkx03586ynsqwete8sojlc5</string>
 </resources>

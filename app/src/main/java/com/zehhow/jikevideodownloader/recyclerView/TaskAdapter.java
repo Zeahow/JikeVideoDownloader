@@ -25,9 +25,14 @@ import com.zehhow.jikevideodownloader.download.TaskStatus;
 import java.io.File;
 import java.util.Vector;
 
-public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder> {
+public class TaskAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     private Context context;
     private Vector<TaskBean> taskList;          // 下载任务列表
+    /**
+     * viewType--分别为item以及空view
+     */
+    private static final int VIEW_TYPE_ITEM = 0;
+    private static final int VIEW_TYPE_EMPTY = 1;
 
     private int position;
 
@@ -167,15 +172,6 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         downloadTask.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, task);
     }
 
-    @NonNull
-    @Override
-    public TaskViewHolder onCreateViewHolder(@NonNull final ViewGroup viewGroup, int i) {
-        View view = LayoutInflater.from(viewGroup.getContext())
-                .inflate(R.layout.task_item_layout, viewGroup, false);
-
-        return new TaskViewHolder(view);
-    }
-
     /**
      * 根据传入的ViewHolder获取对应的TaskBean
      * @param viewHolder 传入的ViewHolder
@@ -186,8 +182,49 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
         return taskList.get(position);
     }
 
+    /***
+     * 获取ItemView的视图类型
+     * @return 视图类型
+     */
     @Override
-    public void onBindViewHolder(@NonNull final TaskViewHolder viewHolder, int i) {
+    public int getItemViewType(int position) {
+        if(taskList.size() == 0) return VIEW_TYPE_EMPTY;
+        else return VIEW_TYPE_ITEM;
+    }
+
+    /**
+     * 根据不同的ViewType返回不同的ViewHolder
+     * @param viewType 视图类型
+     * @return 相应的ViewHolder
+     */
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, int viewType) {
+        final Context context = parent.getContext();
+
+        if(viewType == VIEW_TYPE_EMPTY) {   // 空视图
+            View view = LayoutInflater.from(context).inflate(R.layout.task_item_empty_layout, parent, false);
+            // 设置单击事件
+            view.findViewById(R.id.click_me_to_show_tutorial).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    intent.setData(Uri.parse(context.getString(R.string.tutorial_url)));
+                    context.startActivity(intent);
+                }
+            });
+            return new RecyclerView.ViewHolder(view){};
+        }
+
+        View view = LayoutInflater.from(context) .inflate(R.layout.task_item_layout, parent, false);
+        return new TaskViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int i) {
+        if(!(holder instanceof TaskViewHolder)) return;     // 非任务项视图不进行处理
+
+        final TaskViewHolder viewHolder = (TaskViewHolder)holder;
         TaskBean task = taskList.get(i);
         viewHolder.txtName.setText(task.name);
         viewHolder.progressBar.setProgress(task.progress);
@@ -226,13 +263,20 @@ public class TaskAdapter extends RecyclerView.Adapter<TaskAdapter.TaskViewHolder
     }
 
     @Override
-    public void onViewRecycled(@NonNull TaskViewHolder viewHolder) {
-        // 取消长按事件
-        viewHolder.view.setOnLongClickListener(null);
+    public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
+        if(!(holder instanceof TaskViewHolder)) return;     // 非任务项视图不进行处理
+
+        TaskViewHolder viewHolder = (TaskViewHolder)holder;
+        viewHolder.view.setOnLongClickListener(null);       // 取消长按事件
     }
 
     @Override
     public int getItemCount() {
+        // 如果taskList.size()为0的话，只引入一个布局，就是emptyView
+        // 那么，这个recyclerView的itemCount为1
+        if (taskList.size() == 0) {
+            return 1;
+        }
         return taskList.size();
     }
 }

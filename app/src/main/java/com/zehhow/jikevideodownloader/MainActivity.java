@@ -2,6 +2,7 @@ package com.zehhow.jikevideodownloader;
 
 import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -15,6 +16,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -28,6 +30,7 @@ import com.zehhow.jikevideodownloader.dao.TaskBean;
 import com.zehhow.jikevideodownloader.dialog.AddTaskDialog;
 
 import java.io.File;
+import java.net.URISyntaxException;
 import java.util.Vector;
 
 
@@ -147,7 +150,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 弹出菜单点击事件
+     * 上下文弹出菜单点击事件
      * @param item 菜单项
      * @return 是否停止响应流程
      */
@@ -163,6 +166,61 @@ public class MainActivity extends AppCompatActivity {
                 break;
         }
         return super.onContextItemSelected(item);
+    }
+
+    /**
+     * 标题工具栏的弹出菜单
+     * @return 是否显示菜单
+     */
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
+        return true;
+    }
+
+    /**
+     * 标题工具栏的弹出菜单的点击事件
+     * @param item 菜单项
+     * @return 是否停止响应流程
+     */
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.tutorial:      // 使用教程
+                openUrl(this.getString(R.string.tutorial_url));
+                break;
+            case R.id.feedback:     // 反馈
+                openUrl(this.getString(R.string.feedback_url));
+                break;
+            case R.id.about:        // 关于，显示版本号、作者
+                try {
+                    String versionName = getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName;
+                    String str = "当前版本：" + versionName + "\n作者：樱花小王子";
+                    Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
+                } catch (PackageManager.NameNotFoundException e) {
+                    e.printStackTrace();
+                }
+                break;
+            case R.id.donate:       // 捐赠，跳转到支付宝付款页面
+                try {
+                    Intent intent = Intent.parseUri(getString(R.string.donate_url), Intent.URI_INTENT_SCHEME);
+                    startActivity(intent);
+                } catch (URISyntaxException e) {
+                    Toast.makeText(this, "手机上未安装支付宝", Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    /***
+     * 打开指定网址
+     * @param url 网址
+     */
+    private void openUrl(String url) {
+        Intent intent = new Intent(Intent.ACTION_VIEW);
+        intent.setData(Uri.parse(url));
+        startActivity(intent);
     }
 
     /**
