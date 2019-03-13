@@ -120,6 +120,13 @@ public class TaskAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             return;
         }
 
+        /*
+         * 当taskList的大小在插入新任务前为0时，RecyclerView显示的时空视图
+         * 故而此时要先删除这个空视图，不然会触发闪退
+         */
+        if(taskList.size() == 0)
+            notifyItemRemoved(0);
+
         // 添加至界面
         taskList.add(0 ,task);
         notifyItemInserted(0);
@@ -200,8 +207,6 @@ public class TaskAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull final ViewGroup parent, int viewType) {
-        final Context context = parent.getContext();
-
         if(viewType == VIEW_TYPE_EMPTY) {   // 空视图
             View view = LayoutInflater.from(context).inflate(R.layout.task_item_empty_layout, parent, false);
             // 设置单击事件

@@ -196,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
                 try {
                     String versionName = getPackageManager().getPackageInfo(this.getPackageName(), 0).versionName;
                     String str = "当前版本：" + versionName + "\n作者：樱花小王子";
-                    Toast.makeText(this, str, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, str, Toast.LENGTH_LONG).show();
                 } catch (PackageManager.NameNotFoundException e) {
                     e.printStackTrace();
                 }
