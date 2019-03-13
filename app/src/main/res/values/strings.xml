@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name_release">即刻视频助手</string>
     <string name="app_name_debug">JKVD-Debug</string>
-    <string name="defaultPath">/storage/emulated/0/JKVD</string>
-    <string name="savePath">保存路径</string>
+    <string name="default_path">/storage/emulated/0/JKVD</string>
+    <string name="save_path">保存路径</string>
     <string name="name">名称</string>
     <string name="url">链接</string>
     <string name="gettingName">-! 点我获取名称 !-</string>

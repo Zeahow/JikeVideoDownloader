@@ -30,13 +30,13 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/savePath" />
+        android:text="@string/save_path" />
 
     <EditText
         android:id="@+id/path"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:editable="false"
-        android:text="@string/defaultPath"/>
+        android:text="@string/default_path"/>
 
 </LinearLayout>
