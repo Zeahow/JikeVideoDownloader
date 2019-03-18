@@ -64,8 +64,12 @@ public class AddTaskDialog {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String url = urlTxt.getText().toString();
-                        if(url.isEmpty()) return;
                         Log.d("JKVD", "Original URL: " + url);
+                        if(url.isEmpty() || notJikeUrl(url)) {
+                            Toast.makeText(activity, "请输入以https://m.okjike.com开头的链接", Toast.LENGTH_LONG).show();
+                            Log.d("JKVD", "Url doesn't contain https://m.okjike.com");
+                            return;
+                        }
 
                         // 若未指定视频名称则默认设置为当前时间.mp4
                         if(nameTxt.getText().toString().isEmpty()) {
@@ -94,13 +98,23 @@ public class AddTaskDialog {
         }
     }
 
+    /***
+     * 判断视频链接是否是来自即刻的链接
+     * @param url 视频链接
+     * @return 是否是来自即刻的链接
+     */
+    private boolean notJikeUrl(String url) {
+        if(url == null) return true;
+        return !url.contains("https://m.okjike.com");
+    }
+
     /**
      * 设置视频的名字
      * @param url 视频链接地址
      * @param nameTxt 视频名字所要显示的TextView
      */
     private void setVedioName(String url, final EditText nameTxt) {
-        if(url == null || url.isEmpty() || nameTxt == null) return ;
+        if(url == null || url.isEmpty() || nameTxt == null || notJikeUrl(url)) return;
 
         Request request = new Request.Builder()
                 .url(url)
@@ -128,8 +142,12 @@ public class AddTaskDialog {
                             try {
                                 // 从源代码获取标题
                                 String res = response.body().string();
+                                if(!res.contains("<title"))     // 不包含title头则不获取标题
+                                    return;
                                 res = res.substring(res.indexOf("<title"), res.indexOf("</title>"));
-                                res = res.substring(res.indexOf('>')+1, res.indexOf(" - 即刻"));
+                                res = res.substring(res.indexOf('>') + 1);
+                                if(res.contains(" - 即刻"))       // 去掉即刻字段
+                                    res = res.substring(0, res.indexOf(" - 即刻"));
                                 if(res.length() > 25)
                                     res = res.substring(0, 25);
                                 res += ".mp4";

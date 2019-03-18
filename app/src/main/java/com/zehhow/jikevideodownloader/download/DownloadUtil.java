@@ -71,12 +71,11 @@ public class DownloadUtil {
         if(m3u8Url == null) return null;
         Vector<String> urls = new Vector<>();
 
-        String urlWithoutQuery = "";    // 出去查询部分的Url地址
+        String urlWithoutQuery = "";    // 除去Query参数部分的Url地址
         if(m3u8Url.indexOf('?') != -1)
             urlWithoutQuery = m3u8Url.substring(0, m3u8Url.indexOf('?'));
-        // 此地址开头的是一个mp4地址，故不需再获取ts分段地址
         // 当urlWithoutQuery地址以.mp4结束时也是一个mp4地址
-        if(m3u8Url.startsWith("https://videocdn.ruguoapp.com") || urlWithoutQuery.endsWith(".mp4")) {
+        if(urlWithoutQuery.endsWith(".mp4")) {
             Log.d("JKVD", "Not m3u8");
             Log.d("JKVD", "MP4 URL: " + m3u8Url);
             urls.add(m3u8Url);

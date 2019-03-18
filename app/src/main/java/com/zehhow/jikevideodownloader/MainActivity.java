@@ -2,7 +2,6 @@ package com.zehhow.jikevideodownloader;
 
 import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
@@ -70,7 +69,8 @@ public class MainActivity extends AppCompatActivity {
         // 判断是否由分享功能调用本Activity
         if(Intent.ACTION_SEND.equals(intent.getAction())) {
             String url = intent.getStringExtra(Intent.EXTRA_TEXT);
-            url = url.substring(url.indexOf("https://m.okjike"));
+            if(url.contains("http"))
+                url = url.substring(url.indexOf("http"));
             addTask(url);
         }
     }
